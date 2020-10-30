@@ -79,16 +79,76 @@ const flappyBird = {
     
 }
 
+// Denahndo tela inicial
+const mensagemIncial = {
+    sX: 134,
+    sY: 0,
+    w: 174,
+    h: 152,
+    x: (canvas.width /2) - 174 /2,
+    y: 50,
+    desenha(){
+        contexto.drawImage(
+            sprites,
+            mensagemIncial.sX, mensagemIncial.sY,
+            mensagemIncial.w, mensagemIncial.h,
+            mensagemIncial.x, mensagemIncial.y,
+            mensagemIncial.w, mensagemIncial.h    
+        )
+    }
+};
+
+// [Mudanças de tela]
+
+let telaAtiva = {};
+
+function mudaDeTela(novaTela) {
+    telaAtiva = novaTela;
+};
+
+
+//Tela de início
+const telas = {
+    INICIO: {
+        desenha(){
+            flappyBird.desenha();
+            fundo.desenha();
+            chao.desenha();
+            mensagemIncial.desenha();
+        },
+        click(){ //chamando a função click e passando o estado de mudança
+            mudaDeTela(telas.JOGO);
+        },
+        atualiza() {
+        }
+    }
+};
+
+//Tela do Jogo
+telas.JOGO = {
+    desenha() {
+        fundo.desenha();
+        chao.desenha();
+        flappyBird.desenha();
+    },
+    atualiza() {
+        flappyBird.atualiza();
+    }
+};
+
 function loop() {
-    flappyBird.atualiza();
-    fundo.desenha();
-    chao.desenha();
-    flappyBird.desenha();
-
-    
-
+    telaAtiva.desenha();
+    telaAtiva.atualiza();
     requestAnimationFrame(loop);
-}
+};
 
+// Função que identifica o click na tela
+window.addEventListener('click', function(){
+    if(telaAtiva.click){
+    telaAtiva.click();
+    }
+});
+
+mudaDeTela(telas.INICIO);
 loop();
 
