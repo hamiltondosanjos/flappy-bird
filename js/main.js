@@ -1,11 +1,31 @@
 console.log("Olá, mundo!");
 
+       
+
+
+function play(url) {
+    return new Promise(function(resolve, reject) {   // return a promise
+        var audio = new Audio();                     // create audio wo/ src
+        audio.preload = "auto";                      // intend to play through
+        audio.autoplay = true;                       // autoplay when loaded
+        audio.onerror = reject;                      // on error, reject
+        audio.onended = resolve;                     // when done, resolve
+        
+        var path = './efeitos/';
+        var suffix = '.wav';
+        audio.src = url; // just for example
+        
+    });
+}
+
+//console.log(som_HIT.play());
+
 const sprites = new Image();
 sprites.src ='./sprites.png';
-//Selecionando a tag do canvas
-const canvas = document.querySelector('canvas');
-//Definindo o jogo em 2D
-const contexto = canvas.getContext('2d');
+
+const canvas = document.querySelector('canvas');//Selecionando a tag do canvas
+
+const contexto = canvas.getContext('2d');//Definindo o jogo em 2D
 
 // Plano de fundo
 const fundo = {
@@ -56,28 +76,62 @@ const chao ={
         );
     },
 }
-// Objeto/estrutura que da vida ao passarinho
-const flappyBird = { 
-    spriteX:  0, spriteY:  0,
-    larugra: 33, altura:  24,
-    x:       10, y:       50,
-    velocidade: 0, gravidade: 0.25,
-    atualiza(){ // criando a gravidade
-        flappyBird.velocidade = flappyBird.velocidade + flappyBird.gravidade;
-    
-        flappyBird.y = flappyBird.y + flappyBird.velocidade;
-    },
-    desenha() {
-        contexto.drawImage(
-            sprites, 
-            flappyBird.spriteX, flappyBird.spriteY,// Sprite y, sprite x
-            flappyBird.larugra, flappyBird.altura, // tamanho do objeto no sprite
-            flappyBird.x,       flappyBird.y,      // Posicionamento
-            flappyBird.larugra, flappyBird.altura, // Tamanho do sprite dentro do canvas
-        ); 
+
+// Desenvolvendo a colisão com o chão
+function fazColisao (flappyBird, chao){
+    const flappyBirdY = flappyBird.y + flappyBird.altura;
+    const chaoY = chao.y;
+    if (flappyBirdY >= chaoY) {
+        return true;
     }
-    
+    return false;
 }
+
+function criaFlappyBird(){
+    // Objeto/estrutura que da vida ao passarinho
+    const flappyBird = { 
+        spriteX:  0, spriteY:  0,
+        larugra: 33, altura:  24,
+        x:       10, y:       50,
+        velocidade: 0, gravidade: 0.25,
+        pulo: 4.6,  // Criando a gravidade do pulo
+        pula() {
+            console.log("Devo pular");
+            console.log('Antes', flappyBird.velocidade);
+            flappyBird.velocidade = -flappyBird.pulo;
+            console.log('depois', flappyBird.velocidade);
+        },
+        atualiza(){ // criando a gravidade
+            if(fazColisao(flappyBird, chao)){
+                console.log('Fez colisão');
+                
+                play('./efeitos/hit.wav');
+
+               // console.log(path + hit + suffix);
+
+            
+
+                mudaDeTela(telas.INICIO);
+                return;
+
+            }
+            flappyBird.velocidade = flappyBird.velocidade + flappyBird.gravidade;
+            flappyBird.y = flappyBird.y + flappyBird.velocidade;
+        },
+        desenha() {
+            contexto.drawImage(
+                sprites, 
+                flappyBird.spriteX, flappyBird.spriteY,// Sprite y, sprite x
+                flappyBird.larugra, flappyBird.altura, // tamanho do objeto no sprite
+                flappyBird.x,       flappyBird.y,      // Posicionamento
+                flappyBird.larugra, flappyBird.altura, // Tamanho do sprite dentro do canvas
+            ); 
+        }
+    }
+    return flappyBird;
+}
+
+
 
 // Denahndo tela inicial
 const mensagemIncial = {
@@ -99,27 +153,34 @@ const mensagemIncial = {
 };
 
 // [Mudanças de tela]
-
+const globais = {};
 let telaAtiva = {};
 
 function mudaDeTela(novaTela) {
     telaAtiva = novaTela;
+    if (telaAtiva.inicializa){
+       telaAtiva.inicializa();
+    }
 };
 
 
 //Tela de início
 const telas = {
     INICIO: {
+        inicializa(){
+            globais.flappyBird = criaFlappyBird();
+        },
         desenha(){
-            flappyBird.desenha();
             fundo.desenha();
             chao.desenha();
+            globais.flappyBird.desenha();
             mensagemIncial.desenha();
         },
         click(){ //chamando a função click e passando o estado de mudança
             mudaDeTela(telas.JOGO);
         },
         atualiza() {
+            
         }
     }
 };
@@ -129,10 +190,13 @@ telas.JOGO = {
     desenha() {
         fundo.desenha();
         chao.desenha();
-        flappyBird.desenha();
+        globais.flappyBird.desenha();
+    },
+    click(){
+        globais.flappyBird.pula();
     },
     atualiza() {
-        flappyBird.atualiza();
+        globais.flappyBird.atualiza();
     }
 };
 
